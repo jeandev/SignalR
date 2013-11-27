@@ -165,6 +165,8 @@ namespace Microsoft.AspNet.SignalR.Messaging
             StreamManager.OnReceived(streamIndex, id, message);
         }
 
+        //processing all the messages from a given stream
+        //all messages from a particular stream are ordered by their Id
         [SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "2", Justification = "Called from derived class")]
         [SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "Called from derived class")]
         private void OnReceivedCore(int streamIndex, ulong id, ScaleoutMessage scaleoutMessage)
@@ -184,8 +186,13 @@ namespace Microsoft.AspNet.SignalR.Messaging
                 message.MappingId = id;
                 message.StreamIndex = streamIndex;
 
+                // avoiding dupes?
                 keys.Add(message.Key);
+
+                // Create a local mapping for each message
                 ulong localId = Save(message);
+
+                // Don't the different topics correspond to different streams why use message.Key here?
                 MessageStore<Message> messageStore = Topics[message.Key].Store;
 
                 localMapping[i] = new LocalEventKeyInfo(message.Key, localId, messageStore);
